@@ -27,11 +27,11 @@ func assertEqualMessages(t *testing.T, e, a Message) {
 	}
 
 	if len(e.AllOptions()) != len(a.AllOptions()) {
-		t.Errorf("Expected %v options, got %v", e, a)
+		t.Errorf("Expected %v Options, got %v", e, a)
 	} else {
 		for i, _ := range e.AllOptions() {
 			if e.AllOptions()[i].ID != a.AllOptions()[i].ID {
-				t.Errorf("\nExpected option %v\n got %v", e.AllOptions()[i].ID, a.AllOptions()[i].ID)
+				t.Errorf("\nExpected Option %v\n got %v", e.AllOptions()[i].ID, a.AllOptions()[i].ID)
 				continue
 			}
 			switch e.AllOptions()[i].Value.(type) {
@@ -78,7 +78,7 @@ func TestOptionToBytes(t *testing.T) {
 	}
 
 	for _, test := range tests {
-		op := option{Value: test.in}
+		op := Option{Value: test.in}
 		buf := &bytes.Buffer{}
 		err := op.writeData(buf)
 		got := buf.Bytes()
@@ -118,7 +118,7 @@ func TestMissingOption(t *testing.T) {
 
 func TestOptionToBytesError(t *testing.T) {
 	buf := &bytes.Buffer{}
-	err := option{Value: 3.1415926535897}.writeData(buf)
+	err := Option{Value: 3.1415926535897}.writeData(buf)
 	if err == nil {
 		t.Error("Expected panic. Didn't")
 	} else {
@@ -269,7 +269,7 @@ func TestOptionsWithIllegalLengthAreIgnoredDuringParsing(t *testing.T) {
 		messageID: 0xabcd,
 	}
 	msg, err := ParseDgramMessage([]byte{0x40, 0x01, 0xab, 0xcd,
-		0x73, // URI-Port option (uint) with length 3 (valid lengths are 0-2)
+		0x73, // URI-Port Option (uint) with length 3 (valid lengths are 0-2)
 		0x11, 0x22, 0x33, 0xff})
 	if err != nil {
 		t.Fatalf("Error parsing message: %v", err)
@@ -279,7 +279,7 @@ func TestOptionsWithIllegalLengthAreIgnoredDuringParsing(t *testing.T) {
 	}
 
 	msg, err = ParseDgramMessage([]byte{0x40, 0x01, 0xab, 0xcd,
-		0xd5, 0x01, // Max-Age option (uint) with length 5 (valid lengths are 0-4)
+		0xd5, 0x01, // Max-Age Option (uint) with length 5 (valid lengths are 0-4)
 		0x11, 0x22, 0x33, 0x44, 0x55, 0xff})
 	if err != nil {
 		t.Fatalf("Error parsing message: %v", err)
@@ -299,16 +299,16 @@ func TestDecodeMessageWithUnknownOption(t *testing.T) {
 
 	optionValue := msg.Option(2049)
 	if optionValue == nil {
-		t.Errorf("Expected message has option whose OptionID is 2049, got nil")
+		t.Errorf("Expected message has Option whose OptionID is 2049, got nil")
 	}
 	option, ok := optionValue.([]byte)
 
 	if !ok {
-		t.Errorf("Expected message option 2049 is a byte slice， type assertion failed")
+		t.Errorf("Expected message Option 2049 is a byte slice， type assertion failed")
 	}
 
 	if !bytes.Equal(option, []byte{0x00, 0x01}) {
-		t.Errorf("option value is incorrect. get %q", option)
+		t.Errorf("Option value is incorrect. get %q", option)
 	}
 }
 
@@ -322,16 +322,16 @@ func TestDecodeMessageWithUnknownZeroLenOption(t *testing.T) {
 
 	optionValue := msg.Option(2049)
 	if optionValue == nil {
-		t.Errorf("Expected message has option whose OptionID is 2049, got nil")
+		t.Errorf("Expected message has Option whose OptionID is 2049, got nil")
 	}
 	option, ok := optionValue.([]byte)
 
 	if !ok {
-		t.Errorf("Expected message option 2049 is a byte slice， type assertion failed")
+		t.Errorf("Expected message Option 2049 is a byte slice， type assertion failed")
 	}
 
 	if len(option) != 0 {
-		t.Errorf("option value is incorrect. get %q", option)
+		t.Errorf("Option value is incorrect. get %q", option)
 	}
 }
 
@@ -545,7 +545,7 @@ func TestEncodePath14(t *testing.T) {
 
 	// Inspected by hand.
 	exp := []byte{
-		0x40, 0x1, 0x30, 0x39, 0xbd, 0x01, // extended option length
+		0x40, 0x1, 0x30, 0x39, 0xbd, 0x01, // extended Option length
 		'1', '2', '3', '4', '5', '6', '7', '8',
 		'9', 'A', 'B', 'C', 'D', 'E',
 	}
@@ -572,7 +572,7 @@ func TestEncodePath15(t *testing.T) {
 
 	// Inspected by hand.
 	exp := []byte{
-		0x40, 0x1, 0x30, 0x39, 0xbd, 0x02, // extended option length
+		0x40, 0x1, 0x30, 0x39, 0xbd, 0x02, // extended Option length
 		'1', '2', '3', '4', '5', '6', '7', '8',
 		'9', 'A', 'B', 'C', 'D', 'E', 'F',
 	}
@@ -844,7 +844,7 @@ func TestErrorOptionMarker(t *testing.T) {
 		0xa, 0xb, 0xc, 0xe, 0xf, 0x10}
 	msg, err := ParseDgramMessage(input)
 	if err == nil {
-		t.Errorf("Unexpected success parsing malformed option: %v", msg)
+		t.Errorf("Unexpected success parsing malformed Option: %v", msg)
 	}
 }
 

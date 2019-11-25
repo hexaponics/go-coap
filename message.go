@@ -145,7 +145,7 @@ func (c COAPCode) String() string {
 	return codeNames[c]
 }
 
-// OptionID identifies an option in a message.
+// OptionID identifies an Option in a message.
 type OptionID uint16
 
 /*
@@ -319,7 +319,7 @@ func (c MediaType) String() string {
 	return "Unknown media type: 0x" + strconv.FormatInt(int64(c), 16)
 }
 
-type option struct {
+type Option struct {
 	ID    OptionID
 	Value interface{}
 }
@@ -363,7 +363,7 @@ func decodeInt(b []byte) uint32 {
 	return binary.BigEndian.Uint32(tmp)
 }
 
-func (o option) writeData(buf io.Writer) error {
+func (o Option) writeData(buf io.Writer) error {
 	var v uint32
 
 	switch i := o.Value.(type) {
@@ -384,14 +384,14 @@ func (o option) writeData(buf io.Writer) error {
 	case uint32:
 		v = i
 	default:
-		return fmt.Errorf("invalid type for option %x: %T (%v)",
+		return fmt.Errorf("invalid type for Option %x: %T (%v)",
 			o.ID, o.Value, o.Value)
 	}
 
 	return encodeInt(buf, v)
 }
 
-func (o option) toBytesLength() (int, error) {
+func (o Option) toBytesLength() (int, error) {
 	var v uint32
 
 	switch i := o.Value.(type) {
@@ -410,7 +410,7 @@ func (o option) toBytesLength() (int, error) {
 	case uint32:
 		v = i
 	default:
-		return 0, fmt.Errorf("invalid type for option %x: %T (%v)",
+		return 0, fmt.Errorf("invalid type for Option %x: %T (%v)",
 			o.ID, o.Value, o.Value)
 	}
 
@@ -420,11 +420,11 @@ func (o option) toBytesLength() (int, error) {
 func parseOptionValue(optionDefs map[OptionID]optionDef, optionID OptionID, valueBuf []byte) interface{} {
 	if def, ok := optionDefs[optionID]; ok {
 		if def.valueFormat == valueUnknown {
-			// Skip unrecognized options (RFC7252 section 5.4.1)
+			// Skip unrecognized Options (RFC7252 section 5.4.1)
 			return nil
 		}
 		if len(valueBuf) < def.minLen || len(valueBuf) > def.maxLen {
-			// Skip options with illegal value length (RFC7252 section 5.4.3)
+			// Skip Options with illegal value length (RFC7252 section 5.4.3)
 			return nil
 		}
 		switch def.valueFormat {
@@ -440,28 +440,28 @@ func parseOptionValue(optionDefs map[OptionID]optionDef, optionID OptionID, valu
 			return valueBuf
 		}
 	}
-	// unKnown options
+	// unKnown Options
 	return valueBuf
 }
 
-type options []option
+type Options []Option
 
-func (o options) Len() int {
+func (o Options) Len() int {
 	return len(o)
 }
 
-func (o options) Less(i, j int) bool {
+func (o Options) Less(i, j int) bool {
 	if o[i].ID == o[j].ID {
 		return i < j
 	}
 	return o[i].ID < o[j].ID
 }
 
-func (o options) Swap(i, j int) {
+func (o Options) Swap(i, j int) {
 	o[i], o[j] = o[j], o[i]
 }
 
-func (o options) Remove(oid OptionID) options {
+func (o Options) Remove(oid OptionID) Options {
 	idx := 0
 	for i := 0; i < len(o); i++ {
 		if o[i].ID != oid {
@@ -479,13 +479,12 @@ type Message interface {
 	MessageID() uint16
 	Token() []byte
 	Payload() []byte
-	AllOptions() options
+	AllOptions() Options
 
 	IsConfirmable() bool
 	Options(o OptionID) []interface{}
 	Option(o OptionID) interface{}
-	optionStrings(o OptionID) []string
-	Path() []string
+
 	PathString() string
 	SetPathString(s string)
 	SetPath(s []string)
@@ -524,7 +523,7 @@ type MessageBase struct {
 
 	token, payload []byte
 
-	opts options
+	opts Options
 }
 
 func (m *MessageBase) Type() COAPType {
@@ -547,7 +546,7 @@ func (m *MessageBase) Payload() []byte {
 	return m.payload
 }
 
-func (m *MessageBase) AllOptions() options {
+func (m *MessageBase) AllOptions() Options {
 	return m.opts
 }
 
@@ -556,7 +555,7 @@ func (m *MessageBase) IsConfirmable() bool {
 	return m.typ == Confirmable
 }
 
-// Options gets all the values for the given option.
+// Options gets all the values for the given Option.
 func (m *MessageBase) Options(o OptionID) []interface{} {
 	var rv []interface{}
 
@@ -569,7 +568,7 @@ func (m *MessageBase) Options(o OptionID) []interface{} {
 	return rv
 }
 
-// Option gets the first value for the given option ID.
+// Option gets the first value for the given Option ID.
 func (m *MessageBase) Option(o OptionID) interface{} {
 	for _, v := range m.opts {
 		if o == v.ID {
@@ -601,7 +600,7 @@ func (m *MessageBase) PathString() string {
 func (m *MessageBase) SetPathString(s string) {
 	switch s {
 	case "", "/":
-		//root path is not set as option
+		//root path is not set as Option
 		return
 	default:
 		if s[0] == '/' {
@@ -656,25 +655,25 @@ func (m *MessageBase) SetToken(p []byte) {
 	m.token = p
 }
 
-// RemoveOption removes all references to an option
+// RemoveOption removes all references to an Option
 func (m *MessageBase) RemoveOption(opID OptionID) {
 	m.opts = m.opts.Remove(opID)
 }
 
-// AddOption adds an option.
+// AddOption adds an Option.
 func (m *MessageBase) AddOption(opID OptionID, val interface{}) {
 	iv := reflect.ValueOf(val)
 	if (iv.Kind() == reflect.Slice || iv.Kind() == reflect.Array) &&
 		iv.Type().Elem().Kind() == reflect.String {
 		for i := 0; i < iv.Len(); i++ {
-			m.opts = append(m.opts, option{opID, iv.Index(i).Interface()})
+			m.opts = append(m.opts, Option{opID, iv.Index(i).Interface()})
 		}
 		return
 	}
-	m.opts = append(m.opts, option{opID, val})
+	m.opts = append(m.opts, Option{opID, val})
 }
 
-// SetOption sets an option, discarding any previous value
+// SetOption sets an Option, discarding any previous value
 func (m *MessageBase) SetOption(opID OptionID, val interface{}) {
 	m.RemoveOption(opID)
 	m.AddOption(opID, val)
@@ -693,7 +692,7 @@ const (
 	extoptError      = 15
 )
 
-func writeOpt(o option, buf io.Writer, delta int) {
+func writeOpt(o Option, buf io.Writer, delta int) {
 	/*
 	     0   1   2   3   4   5   6   7
 	   +---------------+---------------+
@@ -750,7 +749,7 @@ func writeOpt(o option, buf io.Writer, delta int) {
 	}
 }
 
-func writeOpts(buf io.Writer, opts options) {
+func writeOpts(buf io.Writer, opts Options) {
 	prev := 0
 	for _, o := range opts {
 		writeOpt(o, buf, int(o.ID)-prev)
@@ -794,7 +793,7 @@ func lengthOptHeader(delta, length int) int {
 	return res
 }
 
-func lengthOpt(o option, delta int) int {
+func lengthOpt(o Option, delta int) int {
 	/*
 	     0   1   2   3   4   5   6   7
 	   +---------------+---------------+
@@ -832,7 +831,7 @@ func lengthOpt(o option, delta int) int {
 	return res
 }
 
-func bytesLengthOpts(opts options) int {
+func bytesLengthOpts(opts Options) int {
 	length := 0
 	prev := 0
 	for _, o := range opts {
@@ -842,10 +841,10 @@ func bytesLengthOpts(opts options) int {
 	return length
 }
 
-// parseBody extracts the options and payload from a byte slice.  The supplied
+// parseBody extracts the Options and payload from a byte slice.  The supplied
 // byte slice contains everything following the message header (everything
 // after the token).
-func parseBody(optionDefs map[OptionID]optionDef, data []byte) (options, []byte, error) {
+func parseBody(optionDefs map[OptionID]optionDef, data []byte) (Options, []byte, error) {
 	prev := 0
 
 	parseExtOpt := func(opt int) (int, error) {
@@ -866,7 +865,7 @@ func parseBody(optionDefs map[OptionID]optionDef, data []byte) (options, []byte,
 		return opt, nil
 	}
 
-	var opts options
+	var opts Options
 
 	for len(data) > 0 {
 		if data[0] == 0xff {
@@ -902,7 +901,7 @@ func parseBody(optionDefs map[OptionID]optionDef, data []byte) (options, []byte,
 		prev = int(oid)
 
 		if opval != nil {
-			opt := option{ID: oid, Value: opval}
+			opt := Option{ID: oid, Value: opval}
 			opts = append(opts, opt)
 		}
 	}

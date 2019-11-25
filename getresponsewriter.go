@@ -17,7 +17,7 @@ func (w *getResponseWriter) WriteMsgWithContext(ctx context.Context, msg Message
 
 // Write send response to peer
 func (w *getResponseWriter) WriteWithContext(ctx context.Context, p []byte) (n int, err error) {
-	l, resp := prepareReponse(w, w.ResponseWriter.getReq().Msg.Code(), w.ResponseWriter.getCode(), w.ResponseWriter.getContentFormat(), p)
+	l, resp := prepareReponse(w, w.ResponseWriter.GetReq().Msg.Code(), w.ResponseWriter.GetCode(), w.ResponseWriter.GetContentFormat(), p)
 	err = w.WriteMsgWithContext(ctx, resp)
 	return l, err
 }

@@ -307,7 +307,7 @@ func readTcpMsgInfo(ctx context.Context, conn contextReader) (msgTcpInfo, error)
 	return mti, nil
 }
 
-func parseTcpOptionsPayload(mti msgTcpInfo, b []byte) (options, []byte, error) {
+func parseTcpOptionsPayload(mti msgTcpInfo, b []byte) (Options, []byte, error) {
 	optionDefs := coapOptionDefs
 	switch COAPCode(mti.code) {
 	case CSM:
@@ -328,7 +328,7 @@ func parseTcpOptionsPayload(mti msgTcpInfo, b []byte) (options, []byte, error) {
 	return o, p, nil
 }
 
-func (m *TcpMessage) fill(mti msgTcpInfo, o options, p []byte) {
+func (m *TcpMessage) fill(mti msgTcpInfo, o Options, p []byte) {
 	m.MessageBase.typ = COAPType(mti.typ)
 	m.MessageBase.code = COAPCode(mti.code)
 	m.MessageBase.token = mti.token

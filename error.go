@@ -25,17 +25,17 @@ const ErrTokenNotExist = Error("token is not exist")
 // ErrInvalidTokenLen invalid token length in Message
 const ErrInvalidTokenLen = Error("invalid token length")
 
-// ErrOptionTooLong option is too long  in Message
-const ErrOptionTooLong = Error("option is too long")
+// ErrOptionTooLong Option is too long  in Message
+const ErrOptionTooLong = Error("Option is too long")
 
-// ErrOptionGapTooLarge option gap too large in Message
-const ErrOptionGapTooLarge = Error("option gap too large")
+// ErrOptionGapTooLarge Option gap too large in Message
+const ErrOptionGapTooLarge = Error("Option gap too large")
 
-// ErrOptionTruncated option is truncated
-const ErrOptionTruncated = Error("option is truncated")
+// ErrOptionTruncated Option is truncated
+const ErrOptionTruncated = Error("Option is truncated")
 
-// ErrOptionUnexpectedExtendMarker unexpected extended option marker
-const ErrOptionUnexpectedExtendMarker = Error("unexpected extended option marker")
+// ErrOptionUnexpectedExtendMarker unexpected extended Option marker
+const ErrOptionUnexpectedExtendMarker = Error("unexpected extended Option marker")
 
 // ErrMessageTruncated message is truncated
 const ErrMessageTruncated = Error("message is truncated")

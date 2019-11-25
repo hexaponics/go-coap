@@ -59,7 +59,7 @@ func (w *noResponseWriter) Write(p []byte) (n int, err error) {
 }
 
 func (w *noResponseWriter) WriteWithContext(ctx context.Context, p []byte) (n int, err error) {
-	l, resp := prepareReponse(w, w.ResponseWriter.getReq().Msg.Code(), w.ResponseWriter.getCode(), w.ResponseWriter.getContentFormat(), p)
+	l, resp := prepareReponse(w, w.ResponseWriter.GetReq().Msg.Code(), w.ResponseWriter.GetCode(), w.ResponseWriter.GetContentFormat(), p)
 	err = w.WriteMsgWithContext(ctx, resp)
 	return l, err
 }
@@ -81,7 +81,7 @@ func (w *noResponseWriter) WriteMsg(msg Message) error {
 }
 
 func (w *noResponseWriter) WriteMsgWithContext(ctx context.Context, msg Message) error {
-	noRespValue, ok := w.ResponseWriter.getReq().Msg.Option(NoResponse).(uint32)
+	noRespValue, ok := w.ResponseWriter.GetReq().Msg.Option(NoResponse).(uint32)
 	if !ok {
 		return ErrNotSupported
 	}
@@ -92,5 +92,5 @@ func (w *noResponseWriter) WriteMsgWithContext(ctx context.Context, msg Message)
 			return ErrMessageNotInterested
 		}
 	}
-	return w.ResponseWriter.getReq().Client.WriteMsgWithContext(ctx, msg)
+	return w.ResponseWriter.GetReq().Client.WriteMsgWithContext(ctx, msg)
 }

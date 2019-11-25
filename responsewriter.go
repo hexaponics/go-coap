@@ -5,7 +5,7 @@ import (
 )
 
 // A ResponseWriter interface is used by an CAOP handler to construct an COAP response.
-// For Obsevation (GET+option observe) it can be stored and used in another go-routine
+// For Obsevation (GET+Option observe) it can be stored and used in another go-routine
 // with using calls NewResponse, WriteContextMsg
 type ResponseWriter interface {
 	Write(p []byte) (n int, err error)
@@ -34,9 +34,9 @@ type ResponseWriter interface {
 	//If Option ContentFormat is not set and Payload is set then call will failed.
 	WriteMsgWithContext(ctx context.Context, msg Message) error
 
-	getCode() *COAPCode
-	getReq() *Request
-	getContentFormat() *MediaType
+	GetCode() *COAPCode
+	GetReq() *Request
+	GetContentFormat() *MediaType
 }
 
 type responseWriter struct {
@@ -142,14 +142,14 @@ func (r *responseWriter) SetContentFormat(contentFormat MediaType) {
 	r.contentFormat = &contentFormat
 }
 
-func (r *responseWriter) getCode() *COAPCode {
+func (r *responseWriter) GetCode() *COAPCode {
 	return r.code
 }
 
-func (r *responseWriter) getReq() *Request {
+func (r *responseWriter) GetReq() *Request {
 	return r.req
 }
 
-func (r *responseWriter) getContentFormat() *MediaType {
+func (r *responseWriter) GetContentFormat() *MediaType {
 	return r.contentFormat
 }

@@ -155,7 +155,7 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 			return nil, fmt.Errorf("cannot listen address: %v", err)
 		}
 		if err = coapNet.SetUDPSocketOptions(udpConn); err != nil {
-			return nil, fmt.Errorf("cannot set upd socket options: %v", err)
+			return nil, fmt.Errorf("cannot set upd socket Options: %v", err)
 		}
 		sessionUPDData = coapNet.NewConnUDPContext(multicastAddress, nil)
 		conn = udpConn
