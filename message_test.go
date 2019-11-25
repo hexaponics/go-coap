@@ -27,7 +27,7 @@ func assertEqualMessages(t *testing.T, e, a Message) {
 	}
 
 	if len(e.AllOptions()) != len(a.AllOptions()) {
-		t.Errorf("Expected %v options, got %v", e, a)
+		t.Errorf("Expected %v Options, got %v", e, a)
 	} else {
 		for i, _ := range e.AllOptions() {
 			if e.AllOptions()[i].ID != a.AllOptions()[i].ID {
