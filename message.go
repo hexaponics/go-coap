@@ -484,7 +484,7 @@ type Message interface {
 	IsConfirmable() bool
 	Options(o OptionID) []interface{}
 	Option(o OptionID) interface{}
-	optionStrings(o OptionID) []string
+	OptionStrings(o OptionID) []string
 	Path() []string
 	PathString() string
 	SetPathString(s string)
@@ -579,7 +579,7 @@ func (m *MessageBase) Option(o OptionID) interface{} {
 	return nil
 }
 
-func (m *MessageBase) optionStrings(o OptionID) []string {
+func (m *MessageBase) OptionStrings(o OptionID) []string {
 	var rv []string
 	for _, o := range m.Options(o) {
 		rv = append(rv, o.(string))
@@ -589,7 +589,7 @@ func (m *MessageBase) optionStrings(o OptionID) []string {
 
 // Path gets the Path set on this message if any.
 func (m *MessageBase) Path() []string {
-	return m.optionStrings(URIPath)
+	return m.OptionStrings(URIPath)
 }
 
 // PathString gets a path as a / separated string.
@@ -618,7 +618,7 @@ func (m *MessageBase) SetPath(s []string) {
 
 // Query gets the Query set on this message if any.
 func (m *MessageBase) Query() []string {
-	return m.optionStrings(URIQuery)
+	return m.OptionStrings(URIQuery)
 }
 
 // QueryString gets a path as an ampersand separated string.
