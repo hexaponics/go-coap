@@ -444,24 +444,24 @@ func parseOptionValue(optionDefs map[OptionID]optionDef, optionID OptionID, valu
 	return valueBuf
 }
 
-type options []option
+type Options []option
 
-func (o options) Len() int {
+func (o Options) Len() int {
 	return len(o)
 }
 
-func (o options) Less(i, j int) bool {
+func (o Options) Less(i, j int) bool {
 	if o[i].ID == o[j].ID {
 		return i < j
 	}
 	return o[i].ID < o[j].ID
 }
 
-func (o options) Swap(i, j int) {
+func (o Options) Swap(i, j int) {
 	o[i], o[j] = o[j], o[i]
 }
 
-func (o options) Remove(oid OptionID) options {
+func (o Options) Remove(oid OptionID) Options {
 	idx := 0
 	for i := 0; i < len(o); i++ {
 		if o[i].ID != oid {
@@ -479,7 +479,7 @@ type Message interface {
 	MessageID() uint16
 	Token() []byte
 	Payload() []byte
-	AllOptions() options
+	AllOptions() Options
 
 	IsConfirmable() bool
 	Options(o OptionID) []interface{}
@@ -524,7 +524,7 @@ type MessageBase struct {
 
 	token, payload []byte
 
-	opts options
+	opts Options
 }
 
 func (m *MessageBase) Type() COAPType {
@@ -547,7 +547,7 @@ func (m *MessageBase) Payload() []byte {
 	return m.payload
 }
 
-func (m *MessageBase) AllOptions() options {
+func (m *MessageBase) AllOptions() Options {
 	return m.opts
 }
 
@@ -750,7 +750,7 @@ func writeOpt(o option, buf io.Writer, delta int) {
 	}
 }
 
-func writeOpts(buf io.Writer, opts options) {
+func writeOpts(buf io.Writer, opts Options) {
 	prev := 0
 	for _, o := range opts {
 		writeOpt(o, buf, int(o.ID)-prev)
@@ -832,7 +832,7 @@ func lengthOpt(o option, delta int) int {
 	return res
 }
 
-func bytesLengthOpts(opts options) int {
+func bytesLengthOpts(opts Options) int {
 	length := 0
 	prev := 0
 	for _, o := range opts {
@@ -845,7 +845,7 @@ func bytesLengthOpts(opts options) int {
 // parseBody extracts the options and payload from a byte slice.  The supplied
 // byte slice contains everything following the message header (everything
 // after the token).
-func parseBody(optionDefs map[OptionID]optionDef, data []byte) (options, []byte, error) {
+func parseBody(optionDefs map[OptionID]optionDef, data []byte) (Options, []byte, error) {
 	prev := 0
 
 	parseExtOpt := func(opt int) (int, error) {
@@ -866,7 +866,7 @@ func parseBody(optionDefs map[OptionID]optionDef, data []byte) (options, []byte,
 		return opt, nil
 	}
 
-	var opts options
+	var opts Options
 
 	for len(data) > 0 {
 		if data[0] == 0xff {
