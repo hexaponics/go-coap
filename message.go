@@ -484,7 +484,7 @@ type Message interface {
 	IsConfirmable() bool
 	Options(o OptionID) []interface{}
 	Option(o OptionID) interface{}
-
+	Path() []string
 	PathString() string
 	SetPathString(s string)
 	SetPath(s []string)
