@@ -25,7 +25,7 @@ import (
 type ClientConn struct {
 	Srv          *Server
 	Client       *Client
-	Commander    *ClientCommander
+	Commander    CCommander
 	ShutdownSync chan error
 	Multicast    bool
 }

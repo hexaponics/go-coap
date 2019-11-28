@@ -9,8 +9,15 @@ import (
 	"time"
 )
 
+type CCommander interface {
+	//NewMessage(p MessageParams) Message
+	RemoteAddr() net.Addr
+}
+
 // ClientCommander provides commands Get,Post,Put,Delete,Observe
 // For compare use ClientCommander.Equal
+//TODO: this too should really be an interface type
+// so that it can be mocked etc...
 type ClientCommander struct {
 	networkSession networkSession
 }
