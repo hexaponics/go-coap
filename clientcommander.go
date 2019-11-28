@@ -9,15 +9,39 @@ import (
 	"time"
 )
 
-type CCommander interface {
-	//NewMessage(p MessageParams) Message
+type Commander interface {
 	RemoteAddr() net.Addr
+	LocalAddr() net.Addr
+	NetworkSession() networkSession
+	SetNetworkSession(s networkSession)
+	ExchangeWithContext(ctx context.Context, m Message) (Message, error)
+	NewMessage(p MessageParams) Message
+	NewGetRequest(path string) (Message, error)
+	NewPostRequest(path string, contentFormat MediaType, body io.Reader) (Message, error)
+	NewPutRequest(path string, contentFormat MediaType, body io.Reader) (Message, error)
+	NewDeleteRequest(path string) (Message, error)
+	Equal(cc1 *ClientCommander) bool
+	Exchange(m Message) (Message, error)
+	WriteMsg(m Message) error
+	WriteMsgWithContext(ctx context.Context, m Message) error
+	Ping(timeout time.Duration) error
+	Get(path string) (Message, error)
+	GetWithContext(ctx context.Context, path string) (Message, error)
+	PingWithContext(ctx context.Context) error
+	Post(path string, contentFormat MediaType, body io.Reader) (Message, error)
+	PostWithContext(ctx context.Context, path string, contentFormat MediaType, body io.Reader) (Message, error)
+	Put(path string, contentFormat MediaType, body io.Reader) (Message, error)
+	PutWithContext(ctx context.Context, path string, contentFormat MediaType, body io.Reader) (Message, error)
+	Delete(path string) (Message, error)
+	DeleteWithContext(ctx context.Context, path string) (Message, error)
+	Observe(path string, observeFunc func(req *Request)) (*Observation, error)
+	ObserveWithContext(ctx context.Context, path string, observeFunc func(req *Request), options ...func(Message)) (*Observation, error)
+	Close() error
+	Sequence() uint64
 }
 
 // ClientCommander provides commands Get,Post,Put,Delete,Observe
 // For compare use ClientCommander.Equal
-//TODO: this too should really be an interface type
-// so that it can be mocked etc...
 type ClientCommander struct {
 	networkSession networkSession
 }
@@ -25,6 +49,14 @@ type ClientCommander struct {
 // NewMessage creates message for request
 func (cc *ClientCommander) NewMessage(p MessageParams) Message {
 	return cc.networkSession.NewMessage(p)
+}
+
+func (cc *ClientCommander) NetworkSession() networkSession {
+	return cc.networkSession
+}
+
+func (cc *ClientCommander) SetNetworkSession(s networkSession) {
+	cc.networkSession = s
 }
 
 func (cc *ClientCommander) newGetDeleteRequest(path string, code COAPCode) (Message, error) {
@@ -224,7 +256,7 @@ func (cc *ClientCommander) Observe(path string, observeFunc func(req *Request)) 
 	return cc.ObserveWithContext(context.Background(), path, observeFunc)
 }
 
-// ObserveContext subscribe to severon path. After subscription and every change on path,
+// ObserveContext subscribe to sever on path. After subscription and every change on path,
 // server sends immediately response
 func (cc *ClientCommander) ObserveWithContext(
 	ctx context.Context,

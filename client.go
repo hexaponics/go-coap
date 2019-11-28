@@ -21,11 +21,11 @@ import (
 // perhaps not but essentially the libs are impossible to test from external
 // codebases. The struct is put together in the Dial function chain this might
 // be better moved into interfaces.
-// for now I have just expoted the fields as I cant see any reason to keep them as private.
+// for now I have just exported the fields as I cant see any reason to keep them as private.
 type ClientConn struct {
 	Srv          *Server
 	Client       *Client
-	Commander    CCommander
+	Commander    Commander
 	ShutdownSync chan error
 	Multicast    bool
 }
@@ -203,19 +203,19 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 				}
 			},
 			newSessionTCPFunc: func(connection *coapNet.Conn, srv *Server) (networkSession, error) {
-				return clientConn.Commander.networkSession, nil
+				return clientConn.Commander.NetworkSession(), nil
 			},
 			newSessionDTLSFunc: func(connection *coapNet.Conn, srv *Server) (networkSession, error) {
-				return clientConn.Commander.networkSession, nil
+				return clientConn.Commander.NetworkSession(), nil
 			},
 			newSessionUDPFunc: func(connection *coapNet.ConnUDP, srv *Server, sessionUDPData *coapNet.ConnUDPContext) (networkSession, error) {
-				if sessionUDPData.RemoteAddr().String() == clientConn.Commander.networkSession.RemoteAddr().String() {
-					if s, ok := clientConn.Commander.networkSession.(*blockWiseSession); ok {
+				if sessionUDPData.RemoteAddr().String() == clientConn.Commander.NetworkSession().RemoteAddr().String() {
+					if s, ok := clientConn.Commander.NetworkSession().(*blockWiseSession); ok {
 						s.networkSession.(*sessionUDP).sessionUDPData = sessionUDPData
 					} else {
-						clientConn.Commander.networkSession.(*sessionUDP).sessionUDPData = sessionUDPData
+						clientConn.Commander.NetworkSession().(*sessionUDP).sessionUDPData = sessionUDPData
 					}
-					return clientConn.Commander.networkSession, nil
+					return clientConn.Commander.NetworkSession(), nil
 				}
 				session, err := newSessionUDP(connection, srv, sessionUDPData)
 				if err != nil {
@@ -241,9 +241,9 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.SetNetworkSession(&blockWiseSession{networkSession: session})
 		} else {
-			clientConn.Commander.networkSession = session
+			clientConn.Commander.SetNetworkSession(session)
 		}
 	case *coapNet.ConnDTLS:
 		session, err := newSessionDTLS(coapNet.NewConn(clientConn.Srv.Conn, clientConn.Srv.heartBeat()), clientConn.Srv)
@@ -252,9 +252,9 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.SetNetworkSession(&blockWiseSession{networkSession: session})
 		} else {
-			clientConn.Commander.networkSession = session
+			clientConn.Commander.SetNetworkSession(session)
 		}
 	case *net.UDPConn:
 		// WriteContextMsgUDP returns error when addr is filled in SessionUDPData for connected socket
@@ -265,9 +265,9 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.SetNetworkSession(&blockWiseSession{networkSession: session})
 		} else {
-			clientConn.Commander.networkSession = session
+			clientConn.Commander.SetNetworkSession(session)
 		}
 	default:
 		clientConn.Srv.Conn.Close()
@@ -293,7 +293,7 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 }
 
 func (co *ClientConn) networkSession() networkSession {
-	return co.Commander.networkSession
+	return co.Commander.NetworkSession()
 }
 
 // LocalAddr implements the networkSession.LocalAddr method.
