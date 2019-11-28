@@ -84,14 +84,14 @@ func TestNoResponseBehaviour(t *testing.T) {
 		<-fin
 	}()
 
-	// connect client
+	// connect Client
 	c := Client{Net: "udp", Handler: func(w ResponseWriter, r *Request) {}}
 	con, err := c.Dial(addr)
 	if err != nil {
 		t.Fatalf("Unexpected error '%v'", err)
 	}
 
-	// send client request
+	// send Client request
 	req := &DgramMessage{
 		MessageBase: MessageBase{
 			typ:  NonConfirmable,
@@ -103,7 +103,7 @@ func TestNoResponseBehaviour(t *testing.T) {
 	req.SetOption(NoResponse, 2)
 	err = con.WriteMsg(req)
 	if err != nil {
-		t.Fatalf("client unable to write message: %v", err)
+		t.Fatalf("Client unable to write message: %v", err)
 	}
 	wg.Wait()
 }

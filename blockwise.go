@@ -870,7 +870,7 @@ func (w *blockWiseNoticeWriter) WriteMsg(msg Message) error {
 }
 
 //Write send whole message with context. If size of payload is less then block szx otherwise
-//send only first block. For Get whole msg client must call Get to
+//send only first block. For Get whole msg Client must call Get to
 //resource.
 func (w *blockWiseNoticeWriter) WriteMsgWithContext(ctx context.Context, msg Message) error {
 	suggestedSzx := w.responseWriter.GetReq().Client.networkSession().blockWiseSzx()

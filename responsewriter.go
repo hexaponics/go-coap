@@ -29,7 +29,7 @@ type ResponseWriter interface {
 	NewResponse(code COAPCode) Message
 
 	WriteMsg(msg Message) error
-	//WriteContextMsg to client.
+	//WriteContextMsg to Client.
 	//If Option ContentFormat is set and Payload is not set then call will failed.
 	//If Option ContentFormat is not set and Payload is set then call will failed.
 	WriteMsgWithContext(ctx context.Context, msg Message) error

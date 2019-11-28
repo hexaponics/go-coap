@@ -10,9 +10,9 @@ import (
 type networkSession interface {
 	// LocalAddr returns the net.Addr of the server
 	LocalAddr() net.Addr
-	// RemoteAddr returns the net.Addr of the client that sent the current request.
+	// RemoteAddr returns the net.Addr of the Client that sent the current request.
 	RemoteAddr() net.Addr
-	// WriteContextMsg writes a reply back to the client.
+	// WriteContextMsg writes a reply back to the Client.
 	WriteMsgWithContext(ctx context.Context, resp Message) error
 	// Close closes the connection.
 	Close() error

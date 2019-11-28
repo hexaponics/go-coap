@@ -304,7 +304,7 @@ func simpleMsgToPath(t *testing.T, payload []byte, co *ClientConn, path string) 
 		t.Fatal("cannot create request", err)
 	}
 
-	res := CreateRespMessageByReq(co.commander.networkSession.IsTCP(), Valid, req)
+	res := CreateRespMessageByReq(co.Commander.networkSession.IsTCP(), Valid, req)
 
 	m, err := co.Exchange(req)
 	if err != nil {
@@ -417,7 +417,7 @@ func simpleChallengingPathMsg(t *testing.T, payload []byte, co *ClientConn, path
 		t.Fatalf("unable to read msg from server: %v", err)
 	}
 
-	res := CreateRespMessageByReq(co.commander.networkSession.IsTCP(), Valid, req0)
+	res := CreateRespMessageByReq(co.Commander.networkSession.IsTCP(), Valid, req0)
 	assertEqualMessages(t, res, resp0)
 }
 
@@ -632,7 +632,7 @@ func BenchmarkServe(b *testing.B) {
 	}
 	defer co.Close()
 
-	data := []byte("Content sent by client")
+	data := []byte("Content sent by Client")
 	b.StartTimer()
 	for i := uint32(0); i < uint32(b.N); i++ {
 		_, err := co.Post("/test", TextPlain, &dataReader{data: data})
@@ -803,7 +803,7 @@ func BenchmarkServeTCPStream(b *testing.B) {
 		MessageBase{
 			typ:     Confirmable,
 			code:    POST,
-			payload: []byte("Content sent by client"),
+			payload: []byte("Content sent by Client"),
 		},
 	}
 	req.SetOption(ContentFormat, TextPlain)

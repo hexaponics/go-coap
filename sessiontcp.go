@@ -106,7 +106,7 @@ func (s *sessionTCP) PingWithContext(ctx context.Context) error {
 
 func (s *sessionTCP) closeWithError(err error) error {
 	if s.connection != nil {
-		c := ClientConn{commander: &ClientCommander{s}}
+		c := ClientConn{Commander: &ClientCommander{s}}
 		s.srv.NotifySessionEndFunc(&c, err)
 		e := s.connection.Close()
 		//s.connection = nil

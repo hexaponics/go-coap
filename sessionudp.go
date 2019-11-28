@@ -75,7 +75,7 @@ func (s *sessionUDP) closeWithError(err error) error {
 	s.srv.sessionUDPMapLock.Lock()
 	delete(s.srv.sessionUDPMap, s.sessionUDPData.Key())
 	s.srv.sessionUDPMapLock.Unlock()
-	c := ClientConn{commander: &ClientCommander{s}}
+	c := ClientConn{Commander: &ClientCommander{s}}
 	s.srv.NotifySessionEndFunc(&c, err)
 
 	return err

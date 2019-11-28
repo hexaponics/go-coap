@@ -1,4 +1,4 @@
-// Package coap provides a CoAP client and server.
+// Package coap provides a CoAP Client and server.
 package coap
 
 import (
@@ -158,7 +158,7 @@ type Server struct {
 	NotifySessionNewFunc func(w *ClientConn)
 	// If NotifyNewSession is set it is called when TCP/UDP session was ended.
 	NotifySessionEndFunc func(w *ClientConn, err error)
-	// The interfaces that will be used for udp-mcast (default uses the system assigned for multicast)
+	// The interfaces that will be used for udp-mcast (default uses the system assigned for Multicast)
 	UDPMcastInterfaces []net.Interface
 	// Use blockWise transfer for transfer payload (default for UDP it's enabled, for TCP it's disable)
 	BlockWiseTransfer *bool
@@ -166,7 +166,7 @@ type Server struct {
 	BlockWiseTransferSzx *BlockWiseSzx
 	// Disable send tcp signal messages
 	DisableTCPSignalMessages bool
-	// Disable processes Capabilities and Settings Messages from client - iotivity sends max message size without blockwise.
+	// Disable processes Capabilities and Settings Messages from Client - iotivity sends max message size without blockwise.
 	DisablePeerTCPSignalMessageCSMs bool
 
 	// UDP packet or TCP connection queue
@@ -494,7 +494,7 @@ func (srv *Server) serveDTLSConnection(ctx *shutdownContext, conn *coapNet.Conn)
 	if err != nil {
 		return err
 	}
-	c := ClientConn{commander: &ClientCommander{session}}
+	c := ClientConn{Commander: &ClientCommander{session}}
 	srv.NotifySessionNewFunc(&c)
 
 	sessCtx, cancel := context.WithCancel(context.Background())
@@ -515,7 +515,7 @@ func (srv *Server) serveDTLSConnection(ctx *shutdownContext, conn *coapNet.Conn)
 
 		// We will block poller wait loop when
 		// all pool workers are busy.
-		c := ClientConn{commander: &ClientCommander{session}}
+		c := ClientConn{Commander: &ClientCommander{session}}
 		srv.spawnWorker(&Request{Client: &c, Msg: msg, Ctx: sessCtx, Sequence: c.Sequence()})
 	}
 }
@@ -555,7 +555,7 @@ func (srv *Server) serveTCPConnection(ctx *shutdownContext, conn *coapNet.Conn) 
 	if err != nil {
 		return err
 	}
-	c := ClientConn{commander: &ClientCommander{session}}
+	c := ClientConn{Commander: &ClientCommander{session}}
 	srv.NotifySessionNewFunc(&c)
 
 	sessCtx, cancel := context.WithCancel(context.Background())
@@ -589,7 +589,7 @@ func (srv *Server) serveTCPConnection(ctx *shutdownContext, conn *coapNet.Conn) 
 
 		// We will block poller wait loop when
 		// all pool workers are busy.
-		c := ClientConn{commander: &ClientCommander{session}}
+		c := ClientConn{Commander: &ClientCommander{session}}
 		srv.spawnWorker(&Request{Client: &c, Msg: msg, Ctx: sessCtx, Sequence: c.Sequence()})
 	}
 }
@@ -630,7 +630,7 @@ func (srv *Server) closeSessions(err error) {
 	srv.sessionUDPMap = make(map[string]networkSession)
 	srv.sessionUDPMapLock.Unlock()
 	for _, v := range tmp {
-		c := ClientConn{commander: &ClientCommander{v}}
+		c := ClientConn{Commander: &ClientCommander{v}}
 		srv.NotifySessionEndFunc(&c, err)
 	}
 }
@@ -645,7 +645,7 @@ func (srv *Server) getOrCreateUDPSession(connUDP *coapNet.ConnUDP, s *coapNet.Co
 		if err != nil {
 			return nil, err
 		}
-		c := ClientConn{commander: &ClientCommander{session}}
+		c := ClientConn{Commander: &ClientCommander{session}}
 		srv.NotifySessionNewFunc(&c)
 		srv.sessionUDPMap[s.Key()] = session
 	}
@@ -680,7 +680,7 @@ func (srv *Server) serveUDP(ctx *shutdownContext, connUDP *coapNet.ConnUDP) erro
 		if err != nil {
 			continue
 		}
-		c := ClientConn{commander: &ClientCommander{session}}
+		c := ClientConn{Commander: &ClientCommander{session}}
 		srv.spawnWorker(&Request{Msg: msg, Client: &c, Ctx: sessCtx, Sequence: c.Sequence()})
 	}
 }
@@ -701,5 +701,5 @@ func (srv *Server) serveCOAP(w ResponseWriter, r *Request) {
 	if handler == nil || reflect.ValueOf(handler).IsNil() {
 		handler = DefaultServeMux
 	}
-	handler.ServeCOAP(w, r) // Writes back to the client
+	handler.ServeCOAP(w, r) // Writes back to the Client
 }

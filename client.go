@@ -1,6 +1,6 @@
 package coap
 
-// A client implementation.
+// A Client implementation.
 
 import (
 	"context"
@@ -16,17 +16,23 @@ import (
 )
 
 // A ClientConn represents a connection to a COAP server.
+//TODO: this really needs to be looked at in terms of refactoring to
+// interface types that can be constructed externally to dial etc
+// perhaps not but essentially the libs are impossible to test from external
+// codebases. The struct is put together in the Dial function chain this might
+// be better moved into interfaces.
+// for now I have just expoted the fields as I cant see any reason to keep them as private.
 type ClientConn struct {
-	srv          *Server
-	client       *Client
-	commander    *ClientCommander
-	shutdownSync chan error
-	multicast    bool
+	Srv          *Server
+	Client       *Client
+	Commander    *ClientCommander
+	ShutdownSync chan error
+	Multicast    bool
 }
 
-// A Client defines parameters for a COAP client.
+// A Client defines parameters for a COAP Client.
 type Client struct {
-	Net            string        // if "tcp" or "tcp-tls" (COAP over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP) or "udp-mcast" for multicast
+	Net            string        // if "tcp" or "tcp-tls" (COAP over TLS) a TCP query will be initiated, otherwise an UDP one (default is "" for UDP) or "udp-mcast" for Multicast
 	MaxMessageSize uint32        // Max message size that could be received from peer. If not set it defaults to 1152 B.
 	TLSConfig      *tls.Config   // TLS connection configuration
 	DTLSConfig     *dtls.Config  // TLS connection configuration
@@ -42,8 +48,8 @@ type Client struct {
 	BlockWiseTransferSzx *BlockWiseSzx // Set maximal block size of payload that will be send in fragment
 
 	DisableTCPSignalMessages        bool // Disable tcp signal messages
-	DisablePeerTCPSignalMessageCSMs bool // Disable processes Capabilities and Settings Messages from client - iotivity sends max message size without blockwise.
-	MulticastHopLimit               int  //sets the hop limit field value for future outgoing multicast packets. default is 2.
+	DisablePeerTCPSignalMessageCSMs bool // Disable processes Capabilities and Settings Messages from Client - iotivity sends max message size without blockwise.
+	MulticastHopLimit               int  //sets the hop limit field value for future outgoing Multicast packets. default is 2.
 }
 
 func (c *Client) readTimeout() time.Duration {
@@ -144,11 +150,11 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 		network = strings.TrimSuffix(c.Net, "-mcast")
 		multicastAddress, err := net.ResolveUDPAddr(network, address)
 		if err != nil {
-			return nil, fmt.Errorf("cannot resolve multicast address: %v", err)
+			return nil, fmt.Errorf("cannot resolve Multicast address: %v", err)
 		}
 		listenAddress, err := net.ResolveUDPAddr(network, "")
 		if err != nil {
-			return nil, fmt.Errorf("cannot resolve multicast listen address: %v", err)
+			return nil, fmt.Errorf("cannot resolve Multicast listen address: %v", err)
 		}
 		udpConn, err := net.ListenUDP(network, listenAddress)
 		if err != nil {
@@ -177,7 +183,7 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 
 	//sync := make(chan bool)
 	clientConn = &ClientConn{
-		srv: &Server{
+		Srv: &Server{
 			Net:                             network,
 			TLSConfig:                       c.TLSConfig,
 			Conn:                            conn,
@@ -197,19 +203,19 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 				}
 			},
 			newSessionTCPFunc: func(connection *coapNet.Conn, srv *Server) (networkSession, error) {
-				return clientConn.commander.networkSession, nil
+				return clientConn.Commander.networkSession, nil
 			},
 			newSessionDTLSFunc: func(connection *coapNet.Conn, srv *Server) (networkSession, error) {
-				return clientConn.commander.networkSession, nil
+				return clientConn.Commander.networkSession, nil
 			},
 			newSessionUDPFunc: func(connection *coapNet.ConnUDP, srv *Server, sessionUDPData *coapNet.ConnUDPContext) (networkSession, error) {
-				if sessionUDPData.RemoteAddr().String() == clientConn.commander.networkSession.RemoteAddr().String() {
-					if s, ok := clientConn.commander.networkSession.(*blockWiseSession); ok {
+				if sessionUDPData.RemoteAddr().String() == clientConn.Commander.networkSession.RemoteAddr().String() {
+					if s, ok := clientConn.Commander.networkSession.(*blockWiseSession); ok {
 						s.networkSession.(*sessionUDP).sessionUDPData = sessionUDPData
 					} else {
-						clientConn.commander.networkSession.(*sessionUDP).sessionUDPData = sessionUDPData
+						clientConn.Commander.networkSession.(*sessionUDP).sessionUDPData = sessionUDPData
 					}
-					return clientConn.commander.networkSession, nil
+					return clientConn.Commander.networkSession, nil
 				}
 				session, err := newSessionUDP(connection, srv, sessionUDPData)
 				if err != nil {
@@ -222,64 +228,64 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 			},
 			Handler: c.Handler,
 		},
-		shutdownSync: make(chan error, 1),
-		multicast:    multicast,
-		commander:    &ClientCommander{},
+		ShutdownSync: make(chan error, 1),
+		Multicast:    multicast,
+		Commander:    &ClientCommander{},
 	}
 
-	switch clientConn.srv.Conn.(type) {
+	switch clientConn.Srv.Conn.(type) {
 	case *net.TCPConn, *tls.Conn:
-		session, err := newSessionTCP(coapNet.NewConn(clientConn.srv.Conn, clientConn.srv.heartBeat()), clientConn.srv)
+		session, err := newSessionTCP(coapNet.NewConn(clientConn.Srv.Conn, clientConn.Srv.heartBeat()), clientConn.Srv)
 		if err != nil {
-			clientConn.srv.Conn.Close()
+			clientConn.Srv.Conn.Close()
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
 		} else {
-			clientConn.commander.networkSession = session
+			clientConn.Commander.networkSession = session
 		}
 	case *coapNet.ConnDTLS:
-		session, err := newSessionDTLS(coapNet.NewConn(clientConn.srv.Conn, clientConn.srv.heartBeat()), clientConn.srv)
+		session, err := newSessionDTLS(coapNet.NewConn(clientConn.Srv.Conn, clientConn.Srv.heartBeat()), clientConn.Srv)
 		if err != nil {
-			clientConn.srv.Conn.Close()
+			clientConn.Srv.Conn.Close()
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
 		} else {
-			clientConn.commander.networkSession = session
+			clientConn.Commander.networkSession = session
 		}
 	case *net.UDPConn:
 		// WriteContextMsgUDP returns error when addr is filled in SessionUDPData for connected socket
-		coapNet.SetUDPSocketOptions(clientConn.srv.Conn.(*net.UDPConn))
-		session, err := newSessionUDP(coapNet.NewConnUDP(clientConn.srv.Conn.(*net.UDPConn), clientConn.srv.heartBeat(), c.MulticastHopLimit), clientConn.srv, sessionUPDData)
+		coapNet.SetUDPSocketOptions(clientConn.Srv.Conn.(*net.UDPConn))
+		session, err := newSessionUDP(coapNet.NewConnUDP(clientConn.Srv.Conn.(*net.UDPConn), clientConn.Srv.heartBeat(), c.MulticastHopLimit), clientConn.Srv, sessionUPDData)
 		if err != nil {
-			clientConn.srv.Conn.Close()
+			clientConn.Srv.Conn.Close()
 			return nil, err
 		}
 		if session.blockWiseEnabled() {
-			clientConn.commander.networkSession = &blockWiseSession{networkSession: session}
+			clientConn.Commander.networkSession = &blockWiseSession{networkSession: session}
 		} else {
-			clientConn.commander.networkSession = session
+			clientConn.Commander.networkSession = session
 		}
 	default:
-		clientConn.srv.Conn.Close()
-		return nil, fmt.Errorf("unknown connection type %T", clientConn.srv.Conn)
+		clientConn.Srv.Conn.Close()
+		return nil, fmt.Errorf("unknown connection type %T", clientConn.Srv.Conn)
 	}
 
 	go func() {
-		err := clientConn.srv.ActivateAndServe()
+		err := clientConn.Srv.ActivateAndServe()
 		select {
-		case clientConn.shutdownSync <- err:
+		case clientConn.ShutdownSync <- err:
 		}
 	}()
-	clientConn.client = c
+	clientConn.Client = c
 
 	select {
 	case <-started:
-	case err := <-clientConn.shutdownSync:
-		clientConn.srv.Conn.Close()
+	case err := <-clientConn.ShutdownSync:
+		clientConn.Srv.Conn.Close()
 		return nil, err
 	}
 
@@ -287,21 +293,21 @@ func (c *Client) DialWithContext(ctx context.Context, address string) (clientCon
 }
 
 func (co *ClientConn) networkSession() networkSession {
-	return co.commander.networkSession
+	return co.Commander.networkSession
 }
 
 // LocalAddr implements the networkSession.LocalAddr method.
 func (co *ClientConn) LocalAddr() net.Addr {
-	return co.commander.LocalAddr()
+	return co.Commander.LocalAddr()
 }
 
 // RemoteAddr implements the networkSession.RemoteAddr method.
 func (co *ClientConn) RemoteAddr() net.Addr {
-	return co.commander.RemoteAddr()
+	return co.Commander.RemoteAddr()
 }
 
 func (co *ClientConn) Exchange(m Message) (Message, error) {
-	return co.commander.ExchangeWithContext(context.Background(), m)
+	return co.Commander.ExchangeWithContext(context.Background(), m)
 }
 
 // ExchangeContext performs a synchronous query. It sends the message m to the address
@@ -312,44 +318,44 @@ func (co *ClientConn) Exchange(m Message) (Message, error) {
 // To specify a local address or a timeout, the caller has to set the `Client.Dialer`
 // attribute appropriately
 func (co *ClientConn) ExchangeWithContext(ctx context.Context, m Message) (Message, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.ExchangeWithContext(ctx, m)
+	return co.Commander.ExchangeWithContext(ctx, m)
 }
 
 // NewMessage Create message for request
 func (co *ClientConn) NewMessage(p MessageParams) Message {
-	return co.commander.NewMessage(p)
+	return co.Commander.NewMessage(p)
 }
 
 // NewGetRequest creates get request
 func (co *ClientConn) NewGetRequest(path string) (Message, error) {
-	return co.commander.NewGetRequest(path)
+	return co.Commander.NewGetRequest(path)
 }
 
 // NewPostRequest creates post request
 func (co *ClientConn) NewPostRequest(path string, contentFormat MediaType, body io.Reader) (Message, error) {
-	return co.commander.NewPostRequest(path, contentFormat, body)
+	return co.Commander.NewPostRequest(path, contentFormat, body)
 }
 
 // NewPutRequest creates put request
 func (co *ClientConn) NewPutRequest(path string, contentFormat MediaType, body io.Reader) (Message, error) {
-	return co.commander.NewPutRequest(path, contentFormat, body)
+	return co.Commander.NewPutRequest(path, contentFormat, body)
 }
 
 // NewDeleteRequest creates delete request
 func (co *ClientConn) NewDeleteRequest(path string) (Message, error) {
-	return co.commander.NewDeleteRequest(path)
+	return co.Commander.NewDeleteRequest(path)
 }
 
 func (co *ClientConn) WriteMsg(m Message) error {
-	return co.commander.WriteMsgWithContext(context.Background(), m)
+	return co.Commander.WriteMsgWithContext(context.Background(), m)
 }
 
 // WriteContextMsg sends direct a message through the connection
 func (co *ClientConn) WriteMsgWithContext(ctx context.Context, m Message) error {
-	return co.commander.WriteMsgWithContext(ctx, m)
+	return co.Commander.WriteMsgWithContext(ctx, m)
 }
 
 // Ping send a ping message and wait for a pong response
@@ -361,7 +367,7 @@ func (co *ClientConn) Ping(timeout time.Duration) error {
 
 // Ping send a ping message and wait for a pong response
 func (co *ClientConn) PingWithContext(ctx context.Context) error {
-	return co.commander.PingWithContext(ctx)
+	return co.Commander.PingWithContext(ctx)
 }
 
 // GetContext retrieve the resource identified by the request path
@@ -370,10 +376,10 @@ func (co *ClientConn) Get(path string) (Message, error) {
 }
 
 func (co *ClientConn) GetWithContext(ctx context.Context, path string) (Message, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.GetWithContext(ctx, path)
+	return co.Commander.GetWithContext(ctx, path)
 }
 
 func (co *ClientConn) Post(path string, contentFormat MediaType, body io.Reader) (Message, error) {
@@ -382,10 +388,10 @@ func (co *ClientConn) Post(path string, contentFormat MediaType, body io.Reader)
 
 // Post update the resource identified by the request path
 func (co *ClientConn) PostWithContext(ctx context.Context, path string, contentFormat MediaType, body io.Reader) (Message, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.PostWithContext(ctx, path, contentFormat, body)
+	return co.Commander.PostWithContext(ctx, path, contentFormat, body)
 }
 
 func (co *ClientConn) Put(path string, contentFormat MediaType, body io.Reader) (Message, error) {
@@ -394,10 +400,10 @@ func (co *ClientConn) Put(path string, contentFormat MediaType, body io.Reader) 
 
 // PutContext create the resource identified by the request path
 func (co *ClientConn) PutWithContext(ctx context.Context, path string, contentFormat MediaType, body io.Reader) (Message, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.PutWithContext(ctx, path, contentFormat, body)
+	return co.Commander.PutWithContext(ctx, path, contentFormat, body)
 }
 
 func (co *ClientConn) Delete(path string) (Message, error) {
@@ -406,10 +412,10 @@ func (co *ClientConn) Delete(path string) (Message, error) {
 
 // Delete delete the resource identified by the request path
 func (co *ClientConn) DeleteWithContext(ctx context.Context, path string) (Message, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.DeleteWithContext(ctx, path)
+	return co.Commander.DeleteWithContext(ctx, path)
 }
 
 func (co *ClientConn) Observe(path string, observeFunc func(req *Request)) (*Observation, error) {
@@ -422,32 +428,32 @@ func (co *ClientConn) ObserveWithContext(
 	observeFunc func(req *Request),
 	options ...func(Message),
 ) (*Observation, error) {
-	if co.multicast {
+	if co.Multicast {
 		return nil, ErrNotSupported
 	}
-	return co.commander.ObserveWithContext(ctx, path, observeFunc, options...)
+	return co.Commander.ObserveWithContext(ctx, path, observeFunc, options...)
 }
 
 // Close close connection
 func (co *ClientConn) Close() error {
 	var err error
-	if co.srv != nil {
-		err = co.srv.Shutdown()
+	if co.Srv != nil {
+		err = co.Srv.Shutdown()
 	} else {
-		err = co.commander.Close()
+		err = co.Commander.Close()
 	}
 	if err != nil {
 		return err
 	}
-	if co.shutdownSync != nil {
-		err = <-co.shutdownSync
+	if co.ShutdownSync != nil {
+		err = <-co.ShutdownSync
 	}
 	return err
 }
 
 // Sequence discontinuously unique growing number for connection.
 func (co *ClientConn) Sequence() uint64 {
-	return co.commander.Sequence()
+	return co.Commander.Sequence()
 }
 
 // Dial connects to the address on the named network.

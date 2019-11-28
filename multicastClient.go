@@ -1,6 +1,6 @@
 package coap
 
-// A client implementation.
+// A Client implementation.
 
 import (
 	"context"
@@ -14,7 +14,7 @@ type MulticastClientConn struct {
 	client *MulticastClient
 }
 
-// A MulticastClient defines parameters for a COAP client.
+// A MulticastClient defines parameters for a COAP Client.
 type MulticastClient struct {
 	Net            string        // "udp" / "udp4" / "udp6"
 	MaxMessageSize uint32        // Max message size that could be received from peer. If not set it defaults to 1152 B.
@@ -29,7 +29,7 @@ type MulticastClient struct {
 	BlockWiseTransfer    *bool         // Use blockWise transfer for transfer payload (default for UDP it's enabled, for TCP it's disable)
 	BlockWiseTransferSzx *BlockWiseSzx // Set maximal block size of payload that will be send in fragment
 
-	MulticastHopLimit int //sets the hop limit field value for future outgoing multicast packets. default is 2.
+	MulticastHopLimit int //sets the hop limit field value for future outgoing Multicast packets. default is 2.
 
 	multicastHandler *TokenHandler
 }
@@ -174,7 +174,7 @@ func (mconn *MulticastClientConn) PublishMsgWithContext(ctx context.Context, req
 		var err error
 		switch r.Msg.Code() {
 		case GET, POST, PUT, DELETE:
-			//dont serve commands by multicast handler (filter own request)
+			//dont serve commands by Multicast handler (filter own request)
 			return
 		}
 		needGet := false

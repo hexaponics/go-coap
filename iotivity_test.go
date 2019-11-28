@@ -46,8 +46,8 @@ func observe(w ResponseWriter, req *Request) {
 
 func TestBlockWisePostBlock16(t *testing.T) {
 	szx := BlockWiseSzx16
-	client := &Client{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
-	co, err := client.Dial(udpServer)
+	Client := &Client{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
+	co, err := Client.Dial(udpServer)
 	if err != nil {
 		t.Fatalf("Error dialing: %v", err)
 	}
@@ -74,9 +74,9 @@ func TestBlockWisePostBlock16(t *testing.T) {
 
 func TestBlockWiseGetBlock16(t *testing.T) {
 	szx := BlockWiseSzx16
-	client := &Client{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
+	Client := &Client{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
 
-	co, err := client.Dial(udpServer)
+	co, err := Client.Dial(udpServer)
 	if err != nil {
 		t.Fatalf("Error dialing: %v", err)
 	}
@@ -100,13 +100,13 @@ func TestBlockWiseGetBlock16(t *testing.T) {
 func TestBlockWiseObserveBlock16(t *testing.T) {
 	szx := BlockWiseSzx16
 	sync := make(chan bool)
-	client := &Client{Net: "udp", Handler: func(w ResponseWriter, req *Request) {
+	Client := &Client{Net: "udp", Handler: func(w ResponseWriter, req *Request) {
 		observe(w, req)
 		t.Fatalf("unexpected  called handler")
 		sync <- true
 	}, BlockWiseTransferSzx: &szx}
 
-	co, err := client.Dial(udpServer)
+	co, err := Client.Dial(udpServer)
 	if err != nil {
 		t.Fatalf("Error dialing: %v", err)
 	}
@@ -123,9 +123,9 @@ func TestBlockWiseObserveBlock16(t *testing.T) {
 
 func TestBlockWiseMulticastBlock16(t *testing.T) {
 	szx := BlockWiseSzx16
-	client := &MulticastClient{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
+	Client := &MulticastClient{Net: "udp", Handler: observe, BlockWiseTransferSzx: &szx}
 
-	co, err := client.Dial("224.0.1.187:5683")
+	co, err := Client.Dial("224.0.1.187:5683")
 	if err != nil {
 		t.Fatalf("Error dialing: %v", err)
 	}
@@ -143,9 +143,9 @@ func TestBlockWiseMulticastBlock16(t *testing.T) {
 func TestGetBlock16(t *testing.T) {
 	szx := BlockWiseSzx16
 	bw := false
-	client := &Client{Net: "tcp", Handler: observe, BlockWiseTransfer: &bw, BlockWiseTransferSzx: &szx}
+	Client := &Client{Net: "tcp", Handler: observe, BlockWiseTransfer: &bw, BlockWiseTransferSzx: &szx}
 
-	co, err := client.Dial(tcpServer)
+	co, err := Client.Dial(tcpServer)
 	if err != nil {
 		t.Fatalf("Error dialing: %v", err)
 	}
